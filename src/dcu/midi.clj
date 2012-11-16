@@ -1,6 +1,10 @@
 (ns dcu.midi
   #^{:author "Jeff Rose"
-     :doc "A higher-level API on top of the Java MIDI apis.  It makes
+     :doc " 
+           ** Modified version of this file, see the overtone project
+           for a clean version of this file. **
+
+           A higher-level API on top of the Java MIDI apis.  It makes
            it easier to configure midi input/output devices, route
            between devices, read/write control messages to devices,
            play notes,			 etc."}
@@ -11,10 +15,12 @@
                        MidiMessage ShortMessage SysexMessage
                        InvalidMidiDataException MidiUnavailableException
                        MidiDevice$Info)
-     (javax.swing JFrame JScrollPane JList
-                  DefaultListModel ListSelectionModel)
-     (java.awt.event MouseAdapter)
-     (java.util.concurrent FutureTask ScheduledThreadPoolExecutor TimeUnit))
+
+     ; (javax.swing JFrame JScrollPane JList
+     ;              DefaultListModel ListSelectionModel)
+     ; (java.awt.event MouseAdapter)
+     ; (java.util.concurrent FutureTask ScheduledThreadPoolExecutor TimeUnit)
+)
   (:use clojure.set)
 ; (:require [overtone.at-at :as at-at])
 )
@@ -79,40 +85,40 @@
               (or (re-find pat (:name %1))
                   (re-find pat (:description %1))))
            devs)))
+; 
+; (defn- list-model
+;   "Create a swing list model based on a collection."
+;   [items]
+;   (let [model (DefaultListModel.)]
+;     (doseq [item items]
+;       (.addElement model item))
+;     model))
 
-(defn- list-model
-  "Create a swing list model based on a collection."
-  [items]
-  (let [model (DefaultListModel.)]
-    (doseq [item items]
-      (.addElement model item))
-    model))
-
-(defn- midi-port-chooser
-  "Brings up a GUI list of the provided midi ports and then calls
-  handler with the port that was double clicked."
-  [title ports]
-  (let [frame   (JFrame. title)
-        model   (list-model (for [port ports]
-                              (str (:name port) " - " (:description port))))
-        options (JList. model)
-        pane    (JScrollPane. options)
-        future-val (FutureTask. #(nth ports (.getSelectedIndex options)))
-        listener (proxy [MouseAdapter] []
-                   (mouseClicked
-                     [event]
-                     (if (= (.getClickCount event) 2)
-                       (.setVisible frame false)
-                       (.run future-val))))]
-    (doto options
-      (.addMouseListener listener)
-      (.setSelectionMode ListSelectionModel/SINGLE_SELECTION))
-    (doto frame
-      (.add pane)
-      (.pack)
-      (.setSize 400 600)
-      (.setVisible true))
-    future-val))
+; (defn- midi-port-chooser
+;   "Brings up a GUI list of the provided midi ports and then calls
+;   handler with the port that was double clicked."
+;   [title ports]
+;   (let [frame   (JFrame. title)
+;         model   (list-model (for [port ports]
+;                               (str (:name port) " - " (:description port))))
+;         options (JList. model)
+;         pane    (JScrollPane. options)
+;         future-val (FutureTask. #(nth ports (.getSelectedIndex options)))
+;         listener (proxy [MouseAdapter] []
+;                    (mouseClicked
+;                      [event]
+;                      (if (= (.getClickCount event) 2)
+;                        (.setVisible frame false)
+;                        (.run future-val))))]
+;     (doto options
+;       (.addMouseListener listener)
+;       (.setSelectionMode ListSelectionModel/SINGLE_SELECTION))
+;     (doto frame
+;       (.add pane)
+;       (.pack)
+;       (.setSize 400 600)
+;       (.setVisible true))
+;     future-val))
 
 (defn- with-receiver
   "Add a midi receiver to the sink device info."
@@ -130,13 +136,27 @@
       (.open dev))
     (assoc source-info :transmitter (.getTransmitter dev))))
 
+; (defn midi-in
+;   "Open a midi input device for reading.  If no argument is given then
+;   a selection list pops up to let you browse and select the midi
+;   device."
+;   ([] (with-transmitter
+;         (.get (midi-port-chooser "Midi Input Selector" (midi-sources)))))
+;  ([in]
+;    (let [source (cond
+;                   (string? in) (midi-find-device (midi-sources) in)
+;                   (midi-device? in) in)]
+;      (if source
+;        (with-transmitter source)
+;        (do
+;          (println "Did not find a matching midi input device for: " in)
+;          nil)))))
+
 (defn midi-in
   "Open a midi input device for reading.  If no argument is given then
   a selection list pops up to let you browse and select the midi
   device."
-  ([] (with-transmitter
-        (.get (midi-port-chooser "Midi Input Selector" (midi-sources)))))
-  ([in]
+	[in]
    (let [source (cond
                   (string? in) (midi-find-device (midi-sources) in)
                   (midi-device? in) in)]
@@ -144,23 +164,37 @@
        (with-transmitter source)
        (do
          (println "Did not find a matching midi input device for: " in)
-         nil)))))
+         nil))))
 
+
+; 
+; (defn midi-out
+;   "Open a midi output device for writing.  If no argument is given
+;   then a selection list pops up to let you browse and select the midi
+;   device."
+;   ([] (with-receiver
+;         (.get (midi-port-chooser "Midi Output Selector" (midi-sinks)))))
+; 	([out] (let [sink (cond
+;                       (string? out) (midi-find-device (midi-sinks) out)
+;                       (midi-device? out) out)]
+;            (if sink
+;              (with-receiver sink)
+;              (do
+;                (println "Did not find a matching midi output device for: " out)
+;                nil)))))
 (defn midi-out
   "Open a midi output device for writing.  If no argument is given
   then a selection list pops up to let you browse and select the midi
   device."
-  ([] (with-receiver
-        (.get (midi-port-chooser "Midi Output Selector" (midi-sinks)))))
-
-  ([out] (let [sink (cond
+	[out] (let [sink (cond
                       (string? out) (midi-find-device (midi-sinks) out)
                       (midi-device? out) out)]
            (if sink
              (with-receiver sink)
              (do
                (println "Did not find a matching midi output device for: " out)
-               nil)))))
+               nil))))
+
 (defn midi-route
   "Route midi messages from a source to a sink.  Expects transmitter
   and receiver objects returned from midi-in and midi-out."
@@ -371,3 +405,14 @@
 ;                d (first durations)]
 ;            (at-at/after cur-time #(midi-note out n v d channel) midi-player-pool)
 ;            (recur (next notes) (next velocities) (next durations) (+ cur-time d)))))))
+
+
+; 
+(defn parse-dev 
+	"Deconstruct the device strcture"
+	[{n :name d :description ven :vendor ver :version src :sources sin :sinks info :info dev :device}] 
+		(println "Name:" n "\nDesc:" d))
+
+(defn fist-dev [] 
+	(parse-dev (first (dcu.midi/midi-ports))))
+	
