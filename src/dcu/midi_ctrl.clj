@@ -78,7 +78,31 @@
 	"print sysex message"
 	[]
 	(dec2str (psx)))
-	
+
+(defn prn-psxs
+		"print sysex message"
+		[]
+		(println (dec2str (psx))))
+		
+(defn psxcsv
+	"print CSV sysex message"
+	[]
+	(clojure.string/replace (dec2str (psx)) #" " ","))
+
+(defn save-patch-csv
+	"Save the patch number to the csv file patch-#.csv"
+	[num]
+	(get-patch num)
+	(spit (clojure.string/join (vector "patch-" num ".csv")) (psxcsv)))
+
+(defn save-patch-txt
+	"Save the patch number to the txt file patch-#.txt"
+	[num]
+	(do
+		(get-patch num)
+		(tdelay 100)
+		(spit (clojure.string/join (vector "patch-" num ".txt")) (psxs))))
+			
 (defn e-hand [event ts]
    (dosync
 	(alter midi-log* conj event))
@@ -99,5 +123,5 @@
 		(send-dev-query)
 		(tdelay 20)
 		(init-sysex (psx))
-		(if (sx-hdr?) (println "DEVICE FOUND: " (dev-name)) (println "NO DEVICE FOUND"))))
+		(if (sx-man?) (println "DEVICE FOUND: " (dev-name)) (println "NO DEVICE FOUND"))))
 		
