@@ -22,7 +22,9 @@
 	"A function to print byte-array of midi sysex data by conj'ing a 0xF0 to the start of the list"
 	[#^bytes barr]
 	(let [len (alength ^bytes barr)] 
-		(if (> len 0) (conj (dmp-array barr) -16) '() )))
+		(if (> len 0) 
+		(conj (dmp-array barr) -16) 
+		'())))
 	
 (def dex2hex (hash-map 
 	0 "00" 1 "01" 2 "02" 3 "03" 4 "04" 5 "05" 6 "06" 7 "07" 8 "08" 9 "09" 10 "0A" 11 "0B" 12 "0C" 13 "0D" 14 "0E" 15 "0F" 
@@ -46,4 +48,27 @@
 	"Convert a list of byte values to hex equivalent" 
 	[list-of-dec]
 	(clojure.string/join " " (map #(dex2hex (long %)) list-of-dec)))
-	
+
+(defn fetch-data
+	"Read the contents at the given URL and save it to the filesystem in ofile"
+	[url ofile]
+  (let  [con    (-> url java.net.URL. .openConnection)
+         fields (reduce (fn [h v] 
+                          (assoc h (.getKey v) (into [] (.getValue v))))
+                        {} (.getHeaderFields con))
+         size   (first (fields "Content-Length"))
+         in     (java.io.BufferedInputStream. (.getInputStream con))
+         out    (java.io.BufferedOutputStream. 
+                 (java.io.FileOutputStream. ofile))
+         buffer (make-array Byte/TYPE 1024)]
+    (loop [g (.read in buffer)
+           r 0]
+      (if-not (= g -1)
+        (do
+          (println r "/" size)
+          (.write out buffer 0 g)
+          (recur (.read in buffer) (+ r g)))))
+    (.close in)
+    (.close out)
+    (.disconnect con)))
+
