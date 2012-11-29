@@ -6,25 +6,32 @@
 
 (def midi-log* (ref []))
 
-(defn tdelay [ms] (Thread/sleep ms))
+(defn tdelay 
+  "delay thread"
+  [ms] 
+  (Thread/sleep ms))
 
 ; Define a vector as the MIDI SYSEX Input Queue
 (def sx-data* (ref []))
+(defn pushsx [data] (dosync (ref-set ref data)))
 
 (def mo* (ref []))
 (def mi* (ref []))
 
 (defn clear-sx
+  "clean the sysex input buffer"
 	[]
 	(dosync 
 		(ref-set sx-data* [])))
 		
 (defn set-midi-out 
+  "assign port used for midi out"
 	[re] 
 	(dosync 
 		(ref-set mo* (midi-out re))))
 
 (defn set-midi-in
+  "assign port used for midi in" 
 	[re] 
 	(dosync 
 		(ref-set mi* (midi-in re))))
@@ -68,11 +75,23 @@
 	(midi-sysex m-out (mk-patch-msg num))))
 
 (defn psx
-	"Remove, then print the head of the Sysex In Queue"
+	"Remove, then return the head of the Ssex In Queue"
 	[] 
 	(let [msg (dmp-sysex-array (ret-sx))
 		 qdata (rm-head)] 
-		pprint msg))
+		(do (locking System/out (println "psx: " msg)) (identity
+                                             msg) ) ))
+            
+(defn print-patch
+  "Display the given patch number"
+  [num]
+  (do 
+    (clear-sx)
+    (tdelay 100)
+    (get-patch num)
+    (tdelay 100)
+    (locking System/out (println "FOO: " (psx))) )
+  )
 
 (defn psxs
 	"print sysex message"
@@ -103,6 +122,13 @@
 		(tdelay 100)
 		(spit (clojure.string/join (vector "patch-" num ".txt")) (psxs))))
 			
+(defn save-patch-html
+  [num]
+  (do
+    (get-patch num)
+    (tdelay 400)
+	(spit (clojure.string/join (vector "../server/public/patch-" num ".html")) (psxs))))
+
 (defn e-hand [event ts]
    (dosync
 	(alter midi-log* conj event))
@@ -114,6 +140,12 @@
 	(let [last-patch (+ en 1)]
 		(map #(do (get-patch %) (psx) (tdelay 10)) (range st last-patch))))
 
+(defn prt-id []
+  (do
+    (send-dev-query)
+    (psx)
+  )
+  )
 (defn id-dev
 	[]
 	(do 

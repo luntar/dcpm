@@ -6,8 +6,9 @@
  ; :offline? no 
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/tools.cli "0.2.1"]
-                 [org.clojure/clojure-contrib "1.2.0"]]
-  :uberjar-name "dcpm.jar"
+                 [org.clojure/clojure-contrib "1.2.0"]
+                 [hiccup "1.0.2"]]
+  :uberjar-name "../dcpm.jar"
   :main dcpm.core
 )
 
