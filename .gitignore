@@ -10,3 +10,5 @@ pom.xml
 .lein-plugins
 
 .README.md.swp
+.cake/*
+tags
