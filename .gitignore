@@ -14,3 +14,9 @@ pom.xml
 tags
 
 syx/fw105.syx
+
+bin/dcpm/*.clj
+bin/dcu/*.clj
+
+.metadata
+
