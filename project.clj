@@ -4,10 +4,12 @@
   :license {:name "Eclipse Public License"
   :url "http://www.eclipse.org/legal/epl-v10.html"}
  ; :offline? no 
-  :dependencies [[org.clojure/clojure "1.3.0"]
+  :jvm-opts  ["-Xdock:name=DCPatchMgr"]
+  :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/clojure-contrib "1.2.0"]
-                 [hiccup "1.0.2"]]
+                 [gloss "0.2.2-beta3"]
+                 ]
   :uberjar-name "../dcpm.jar"
   :main dcpm.core
 )

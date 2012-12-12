@@ -1,23 +1,21 @@
 (ns dcpm.core
-  (:gen-class)
-  (:use [dcu.midi-ctrl])
+  (:gen-class 
+    :name "bob")
+  (:require [dcu.midi-ctrl])
   (:use [clojure.tools.cli :only [cli]])
-  (:use [clojure.string :only [upper-case]])
+  (:require [clojure.string])
   (:use [dcu.midi-protocol])
   (:use [dcu.data-tools])
-  (:use [clojure.pprint])
-)
+  (:use [clojure.pprint]))
 
 (defn version [] "0.0.1")
 
 (comment 
   (defn t [] 
     (do
-      (init-midi "MIDI")
+      (init-midi "Port")
       (id-dev)
-      (println (psx))))
-  
-)
+      (println (psx)))))
 
 (defn -main [ & args]
 
@@ -29,7 +27,8 @@
 			["-l" "--list-midi-ports" "Prints MIDI dev descriptions" :default false :flag true]
 			["-r" "--read-patch" "Reads the specific patch number"  :default 0 :parse-fn #(Integer. %)]
 			["-t" "--run-test" "run specific test number"  :default 0 :parse-fn #(Integer. %)]
-			["-p" "--midi-port" "Use the port with the given 'partial' description" :default "MIDI"]
+                        ["-e" "--restore" "Restore specified preset file"]
+			["-p" "--midi-port" "Use the port with the given 'partial' description" :default "Port"]
 			)]
       
 	   (try
@@ -43,34 +42,33 @@
        
 	      (when (:list-midi-ports options)
               (println (pprint 
-                       (map :description 
-                       (dcu.midi/midi-devices))))
+              (map :description 
+              (dcu.midi/midi-devices))))
               (System/exit 0))
 
        ; Start the MIDI system
-       (init-midi (:midi-port options))
-       (id-dev)
-       (prt-id)
+       (dcu.midi-ctrl/init-midi (:midi-port options))
+       (dcu.midi-ctrl/id-dev)
 
-        ( when (:run-test options)
+        ( when (not= 0  (:run-test options) )
             ( let [id (:run-test options)]
-              (prt-id)
+              (println "run-test")
+              (dcu.midi-ctrl/prt-id)
               (System/exit 0)
               ))
+
+       (when (:restore options)
+         (let [file-name (:restore options)]
+            (dcu.midi-ctrl/restore-preset file-name))
+         (System/exit 0))
        ; Options that require the MIDI susbsystem
        (when (:read-patch options)
          (let [id (:read-patch options)]
-           ( println "test: " options )
-           (println (:read-patch options) 
-             (dcu.midi-ctrl/print-patch id) 
-             ;(send-dev-query)
-             ;(tdelay 150)
-             ;(println (psx))
-            (save-patch-txt id)
-           ))
+         (dcu.midi-ctrl/print-patch id))
          (System/exit 0))
 
         (catch Exception e
-          (println "err")))
+          (println "Internal Error: " e )))
    ))
   
+; "/Users/john/proj/dc/fp105.syx"

@@ -1,6 +1,9 @@
 (ns dcu.data-tools
 	(:use [clojure.pprint])
+  (:require clojure.string)
+  (:import [java.io FileInputStream FileOutputStream File])
 	)
+
 
 (defn get-hi
 	"Return the upper bits of the given value so it can be encoded in a 7-bit midi byte"
@@ -13,7 +16,7 @@
 	(bit-and val 0x7F))
 	
 (defn dmp-array 
-	"A function to print byte-array data"
+	"A function to return byte-array as a seq"
 	[#^bytes barr]
 	(let [len (alength ^bytes barr)] 
 		(map #(+ (aget ^bytes barr %) 0) (range 0 len))))
@@ -44,6 +47,10 @@
 	-32 "E0" -31 "E1" -30 "E2" -29 "E3" -28 "E4" -27 "E5" -26 "E6" -25 "E7" -24 "E8" -23 "E9" -22 "EA" -21 "EB" -20 "EC" -19 "ED" -18 "EE" -17 "EF" 
 	-16 "F0" -15 "F1" -14 "F2" -13 "F3" -12 "F4" -11 "F5" -10 "F6" -9 "F7" -8 "F8" -7 "F9" -6 "FA" -5 "FB" -4 "FC" -3 "FD" -2 "FE" -1 "FF"))
 	
+(defn hex 
+  "Convert a twoscomp byte to an 8bit hex string -16->\"F0\""
+  [val]
+  (dex2hex val))
 (defn dec2str
 	"Convert a list of byte values to hex equivalent" 
 	[list-of-dec]
@@ -72,3 +79,102 @@
     (.close out)
     (.disconnect con)))
 
+(defn printhex
+	"Print the given seq of twos-complement 8bit data as a string of hex byte values"
+	[dec-data] 
+	(let [msg (dec2str dec-data)]
+		(do (locking System/out (println msg)))))
+
+(defn slurp-binary
+  "Read in a file containing binary data into a byte-array."
+  [f-name]
+  (let [f   (File. f-name)
+        fis (FileInputStream. f)
+        len (.length f)
+        ba  (byte-array len)]
+    (loop [offset 0]
+      (when (< offset len)
+        (let [num-read (.read fis ba offset (- len offset))]
+          (when (>= num-read 0)
+            (recur (+ offset num-read))))))
+    (.close fis)
+    ba)) 
+
+(defn spit-binary
+  "Write a byte-array into a file with path f-name."
+  [f-name bytes]
+  (let [f   (File. f-name)
+        fos (FileOutputStream. f)]
+    (.write fos bytes)
+    (.close fos)))
+ 
+; This is like a global var, but it's thread safe!  Dave, the '*' is 
+; part of the name, it's not a pointer, etc...  It tells us that 'presets*'
+; is a mutabel var.
+(def presets*  (atom  [])) 
+
+(defn load-presets 
+   "Load the preset file into the preset persitent buffer"
+   [file-name]
+   (let [p-data (dcu.data-tools/slurp-binary file-name)
+         valid? true ] 
+     (reset! presets* p-data)))
+
+(defn dump-presets
+  "Use at the repl, use this function to hex dump all the presets loaded in the presets* atom."
+  []
+  (printhex @presets*))
+
+(defn aset-seq
+  "Sets the byte value at idx of the array and return a seq"
+  [a idx val]
+  (let [new-a (aclone a)
+        new-v (byte val)]
+        (aset-byte new-a idx new-v)
+        (dmp-array new-a) ))
+
+(defn aset16-byte
+  "Returns an array by cloning the byte array a, set the value to 2 bytes starting at idx with the hi and lo part of val16"
+  [a idx val16]
+  (let [new-a (aclone a)
+        new-hi (get-hi val16)
+        new-lo (get-lo val16)]
+        (aset-byte new-a idx new-hi)
+        (aset-byte new-a (+ idx 1) new-lo)
+        new-a))
+(defn mk-preset-vector
+  "Returns a vector of vectors by subdividing the vector n by a count of p-sz.
+   This requires that each preset in n is exactly the size p-sz.
+   TODO: fix - Note, there's note error checking in this function (count n) better
+   divide evanly by p-sz, otherwise something is wrong "
+   [n p-sz]
+    (loop [result [] preset-seq n]
+       (if (zero? (count preset-seq))
+         result
+          (recur (conj result (vec (take p-sz preset-seq))) (drop p-sz preset-seq))
+          )))
+;; Test Notes - How to convert a preset binary file into a seq of individual preset vectors
+; Load 200 650 byte preset sysex messages from a binary file
+(load-presets "/Users/john/proj/dc/fp105.syx")
+; Make a vector of individual preset vectors.  Each vector contains the twos complement
+; MIDI byte data.
+(def pv (mk-preset-vector (vec (dmp-array @presets*)) 650))
+; This function will return the nth preset vector
+(defn take-preset [n] (first (take n pv)))
+; This hex-dumps the preset 4
+;(printhex (take-preset 4))
+;; For the repl 
+(defn hhp 
+  "Hex Head Preset - Return the head of the preset array has a hex string"
+  [n] 
+  (dec2str (take n (dmp-sysex-array @presets*))))
+
+(defn hp
+  "Head Preset - return the head of the preset array has a seq of twos-comp values"
+  [n] 
+  (take n (dmp-sysex-array @presets*)))
+
+(defn htp 
+  "Hex Tail Preset - Return the last n bytes of the preset array has a hex string"
+  [n] 
+  (dec2str (take-last n (dmp-sysex-array @presets*))))
