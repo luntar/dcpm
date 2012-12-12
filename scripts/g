@@ -1,0 +1,1 @@
+mvim -p ./src/dcpm/core.clj ./src/dcu/sx_data.clj ./src/dcu/midi.clj ./src/dcu/midi_ctrl.clj ./src/dcu/midi_protocol.clj ./test/dcpm/core_test.clj ./src/dcu/data_tools.clj
