@@ -1,12 +1,11 @@
 (ns dcpm.core
-  (:gen-class 
-    :name "bob")
-  (:require [dcu.midi-ctrl])
-  (:use [clojure.tools.cli :only [cli]])
-  (:require [clojure.string])
+  (:gen-class)
   (:use [dcu.midi-protocol])
+  (:require dcu.midi-ctrl)
   (:use [dcu.data-tools])
-  (:use [clojure.pprint]))
+  (:use [clojure.tools.cli :only  [cli]])
+  (:require  [clojure.string])
+  (:use [clojure.pprint])) 
 
 (defn version [] "0.0.1")
 
@@ -59,8 +58,9 @@
 
        (when (:restore options)
          (let [file-name (:restore options)]
-            (dcu.midi-ctrl/restore-preset file-name))
+            (dcu.midi-ctrl/restore-presets file-name))
          (System/exit 0))
+
        ; Options that require the MIDI susbsystem
        (when (:read-patch options)
          (let [id (:read-patch options)]
