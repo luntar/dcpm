@@ -197,9 +197,9 @@
   (let [receiver (proxy [Receiver] []
                    (close [] nil)
                    (send [msg timestamp] (if (instance? ShortMessage msg )
-                                           	(fun (assoc (midi-msg msg timestamp) :device input))
-										 	(if (instance? SysexMessage msg ) 
-												(fun (assoc (sx-midi-msg msg timestamp) :device input))))))]
+                                           (fun (assoc (midi-msg msg timestamp) :device input))
+                                           (if (instance? SysexMessage msg ) 
+                                             (fun (assoc (sx-midi-msg msg timestamp) :device input))))))]
     (.setReceiver (:transmitter input) receiver)
     receiver))
 
