@@ -22,6 +22,22 @@
 	"Return a name string for the current device"
 	[]
 	(dnames @sx-pid*))
+
+(defn dev-ver 
+  "Return a string that contains the version number of the device. If the version has a zero in byte 0, then
+  the string is formated as \"<byte1>.<byte2><byte3>.\"  If byte 0 is non-zero, the it is assumed that 
+  this is a development release and the string is formated as \"DEVELOPMENT <byte0>-<byte1><byte2><byte3>\""  
+  [] 
+  (let [ver @sx-ver*
+        release? (= 48 (nth ver 0))
+        V0 (char (nth ver 0)) 
+        V1 (char (nth ver 1)) 
+        V2 (char (nth ver 2)) 
+        V3 (char (nth ver 3))] 
+    (if release?
+      (format "%c.%c%c" V1 V2 V3 )
+      (format "DEVELOPMENT %c-%c%c%c" V0 V1 V2 V3 ))))
+
 	 
 (defn clear-sysex-hdr
 	[]
