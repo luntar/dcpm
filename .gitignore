@@ -20,3 +20,5 @@ bin/dcpm/*.clj
 bin/dcu/*.clj
 .metadata
 .settings
+
+foo.txt
