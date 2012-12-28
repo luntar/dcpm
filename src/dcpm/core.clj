@@ -26,7 +26,8 @@
 			["-l" "--list-midi-ports" "Prints MIDI dev descriptions" :default false :flag true]
 			["-r" "--read-patch" "Reads the specific patch number"  :default 0 :parse-fn #(Integer. %)]
 			["-t" "--run-test" "run specific test number"  :default 0 :parse-fn #(Integer. %)]
-                        ["-e" "--restore" "Restore specified preset file"]
+      ["-e" "--restore" "Restore specified preset file"]
+      ["-c" "--csv" "dump each patch to a csv file"]
 			["-p" "--midi-port" "Use the port with the given 'partial' description" :default "Port"]
 			)]
       
@@ -59,6 +60,11 @@
        (when (:restore options)
          (let [file-name (:restore options)]
             (dcu.midi-ctrl/restore-presets file-name))
+         (System/exit 0))
+
+       (when (:csv options)
+         (let [file-name (:csv options)]
+            (dcu.midi-ctrl/dump-presets-csv file-name))
          (System/exit 0))
 
        ; Options that require the MIDI susbsystem
