@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
   :url "http://www.eclipse.org/legal/epl-v10.html"}
  ; :offline? no 
-  :jvm-opts  ["-Xdock:name=DCPatchMgr"]
+;  :jvm-opts  ["-Xdock:name=DCPatchMgr"]
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/clojure-contrib "1.2.0"]

@@ -155,12 +155,12 @@
           )))
 ;; Test Notes - How to convert a preset binary file into a seq of individual preset vectors
 ; Load 200 650 byte preset sysex messages from a binary file
-(load-presets "/Users/john/proj/dc/fp105.syx")
+;(load-presets "/Users/john/proj/dc/fp105.syx")
 ; Make a vector of individual preset vectors.  Each vector contains the twos complement
 ; MIDI byte data.
-(def pv (mk-preset-vector (vec (dmp-array @presets*)) 650))
+;(def pv (mk-preset-vector (vec (dmp-array @presets*)) 650))
 ; This function will return the nth preset vector
-(defn take-preset [n] (first (take n pv)))
+;(defn take-preset [n] (first (take n pv)))
 ; This hex-dumps the preset 4
 ;(printhex (take-preset 4))
 ;; For the repl 
