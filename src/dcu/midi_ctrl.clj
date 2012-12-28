@@ -1,10 +1,10 @@
 (ns dcu.midi-ctrl
-
 	(:use [dcu.midi])
 	(:use [dcu.data-tools])
 	(:use [dcu.midi-protocol])	
   (:use dcu.sx-data)
   (:require [clojure.string ])
+  (:use [clj-time.local :only [local-now]])
 	(:use [clojure.pprint]))
 
 (def midi-log* (ref []))
@@ -81,6 +81,7 @@
     (midi-sx-send (mk-command-msg cmd)))
   ([cmd arg]
     (midi-sx-send (mk-command-msg cmd arg))))
+
 (defn get-patch
 	"Request the given patch from the connected device"
 	([num] 
@@ -116,31 +117,66 @@
 		[]
 		(println (dec2str (sx-pop))))
 		
-(defn psxcsv
-	"print CSV sysex message"
-	[]
-	(clojure.string/replace (dec2str (sx-pop)) #" " ",") )
-
 (defn print-patch-range
 	"print a range of patchs"
 	[st en] 
 	(let [last-patch (+ en 1)]
 		(map #(do (println "Patch " % ":") (dcu.data-tools/printhex  (get-patch %)) ) (range st last-patch))))
 
-
 (defn tocsv 
 	"return csv data for the given seq"
 	[msg]
 	(clojure.string/replace (dec2str (msg)) #" " ",") )
 
-(defn save-patch-csv
-	"Save the patch number to the csv file patch-#.csv"
-	[num]
-	(get-patch num)
-	(spit (clojure.string/join (vector "patch-" num ".csv")) (psxcsv)))
+(defn patch2csv
+	"Append preset data 'num' to the given file"
+	[num file-name]
+	(do
+		(let [pdata (get-patch num)
+          hdata (dec2str (get-patch num))
+          hdata-newline (clojure.string/join (vector  hdata "\n"))
+          preset-data (clojure.string/replace hdata-newline #" " ",")] 
+		(spit file-name preset-data :append true))))
+
+(defn mk-file-hdr
+  "Create the file 'file-name' and write information about the time, device, and version"
+  [file-name title]
+  (let [t  (clojure.string/join (vector "Title," title "\n"))
+        ct (clojure.string/join (vector "Creation Time," (.toString (local-now)) "\n"))
+        n  (clojure.string/join (vector "Device Name," (dev-name) "\n"))
+        v  (clojure.string/join (vector "Firmware Version," (dev-ver) "\n"))]
+    (spit file-name t)
+    (spit file-name ct :append true)
+    (spit file-name n :append true)
+    (spit file-name v :append true)
+    (spit file-name "\n" :append true)))
+
+(defn lprt [s] 
+    (locking System/out (print s))
+  true
+  ) 
+
+(defn lprtln [s] 
+    (locking System/out (println s))
+  true
+  ) 
+
+
+(defn dump-presets-csv
+  "Save all presets as a csv in the given file"
+  [file-name]
+   (do  
+    (println "Saving presets to " file-name)
+    (sx-clear)
+    (mk-file-hdr file-name "Preset Dump")
+    (lprt "Writing: ")
+   (time
+      (doall (map  (fn [num] (do (print (+ 1 num) " ") (flush) (patch2csv num file-name))) (range 0 200))))
+    (lprtln "\ndone")
+     ))
 
 (defn save-patch-txt
-	"Save the patch number to the txt file patch-#.txt"
+	" Save the patch number to the txt file patch-#.txt"
 	[num]
 	(do
 		(let [ pdata (get-patch num)] 
@@ -155,7 +191,7 @@
 	"Return the patch data for each patch within the patch range: start to end"
 	[st en] 
 	(let [last-patch (+ en 1)]
-		(map #( get-patch % ) (range st last-patch))))
+       ))
 
 (defn save-patch-range
 	"Return the patch data for each patch within the patch range: start to end"
@@ -185,3 +221,5 @@
   "get preset n, and return the first 8 bytes as a hext string"
   [n] 
   (do (get-preset n) (hhp 15)))
+
+
