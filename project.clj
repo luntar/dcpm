@@ -8,9 +8,9 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/clojure-contrib "1.2.0"]
-                 [gloss "0.2.2-beta3"]
+                 [clj-time "0.4.4"]
                  ]
   :uberjar-name "../dcpm.jar"
   :main dcpm.core
 )
-
+              ;[gloss "0.2.2-beta3"]
