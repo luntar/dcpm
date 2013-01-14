@@ -1,48 +1,48 @@
 (ns dcu.midi-ctrl
-	(:use [dcu.midi])
-	(:use [dcu.data-tools])
-	(:use [dcu.midi-protocol])	
+        (:use [dcu.midi])
+        (:use [dcu.data-tools])
+        (:use [dcu.midi-protocol])
   (:use dcu.sx-data)
   (:require [clojure.string ])
   (:use [clj-time.local :only [local-now]])
-	(:use [clojure.pprint]))
+        (:use [clojure.pprint]))
 
 (def midi-log* (ref []))
-
 
 (def mo* (ref []))
 (def mi* (ref []))
 
-(defn set-midi-out 
+(defn set-midi-out
   "assign port used for midi out"
-	[re] 
-	(dosync 
-		(ref-set mo* (midi-out re))))
+        [re]
+        (dosync
+                (ref-set mo* (midi-out re))))
 
 (defn set-midi-in
-  "assign port used for midi in" 
-	[re] 
-	(dosync 
-		(ref-set mi* (midi-in re))))
+  "assign port used for midi in"
+        [re]
+        (dosync
+                (ref-set mi* (midi-in re))))
 
-(defn init-midisysex-input 
-	"Register a midi sysex hander for the given midi source"
-	[m-in] 
-	(midi-sx-handle-events m-in (fn [e ts] (dosync (alter sx-data* conj e )))))
+(defn init-midisysex-input
+        "Register a midi sysex hander for the given midi source"
+        [m-in]
+        (midi-sx-handle-events m-in (fn [e ts] (dosync (alter sx-data* conj e )))))
 
 (defn init-midi
-	"Initalize MIDI I/O, use the given regex to match a device in the device list"
-	[re]
-	(do 
-		(set-midi-out re)
-		(set-midi-in re)
-		(init-midisysex-input @mi*)))
-		
+        "Initalize MIDI I/O, use the given regex to match a device in the device list"
+        [re]
+
+        (set-midi-out re)
+        (set-midi-in re)
+        (init-midisysex-input @mi*))
+
 (defn psx
-	"Print the data in the sysex queue"
-	[] 
-	(let [msg (sx-pop)]
-		(do (locking System/out (println "psx: " msg)))))
+
+  "Print the data in the sysex queue"
+        []
+        (let [msg (sx-pop)]
+                (do (locking System/out (println "psx: " msg)))))
 
 
 (defn midi-sx-send
@@ -63,19 +63,36 @@
    (sx-wait 10000)
    (sx-pop-bytes)))
 
+(defn calk-patch-chksum
+  [pseq]
+  (reduce  (fn  [a b]  (bit-and 0x7F  (+ a b)))  (drop-last 2 (drop 9 pseq))))
+
+(defn midi-sx-send-fix-get-bytes
+  "Issue the given command, wait for then return the responce and return a byte-array"
+  ([msg] (midi-sx-send-get-bytes @mo* msg))
+  ([out-port msg]
+   (let [pdata (append-sysex-hdr (drop 6 msg))
+         chksum (calk-patch-chksum pdata)
+         pdatar (into (vec (drop 2 pdata)) (vector chksum -9)) ]
+   (midi-sysex out-port pdatar)
+   (sx-wait 10000)
+   (sx-pop-bytes)
+    )))
+
 (defn send-dev-query
-	"Sends a MIDI Device Inquirty to the given output sink \"m-out\""
-	([] (send-dev-query @mo*))
-	([m-out] (midi-sx-send m-out 
-		[0xF0 0x7E 0x7F 0x06 0x01 0xF7])))
+        "Sends a MIDI Device Inquirty to the given output sink \"m-out\""
+        ([] (send-dev-query @mo*))
+        ([m-out] (midi-sx-send m-out
+                [0xF0 0x7E 0x7F 0x06 0x01 0xF7])))
 
 (defn restore-presets
   "Write the presets vec to the device"
   [file-name]
-  (let [ adata (dcu.data-tools/load-presets file-name)        
+  (let [ adata (dcu.data-tools/load-presets file-name)
         vdata (vec (dmp-array adata))
         pv (mk-preset-vector vdata 650)]
     ))
+
 (defn send-dc-cmd
   ([cmd]
     (midi-sx-send (mk-command-msg cmd)))
@@ -83,60 +100,58 @@
     (midi-sx-send (mk-command-msg cmd arg))))
 
 (defn get-patch
-	"Request the given patch from the connected device"
-	([num] 
-	(midi-sx-send (mk-patch-msg num))))
+        "Request the given patch from the connected device"
+        ([num]
+        (midi-sx-send (mk-patch-msg num))))
 
 (defn set-preset
-	"Write the preset, return hex string responce"
-	([num] 
-   (let [preset (aset16-byte @presets* 6 num)
-         responce (dec2str (dmp-sysex-array (midi-sx-send-get-bytes (dmp-sysex-array preset))))]
-     responce
-    )))
+  "Write the preset, return hex string responce"
+  ([num]
+   (dec2str  (dmp-array  (midi-sx-send-get-bytes  (dmp-array  (aset16-byte @presets* 7 num)))))))
+
 (defn get-preset
-	"Request the given preset, return data as byte-array"
-	([num] 
-	(let [p-data (midi-sx-send-get-bytes (mk-patch-msg num))]
+        "Request the given preset, return data as byte-array"
+        ([num]
+        (let [p-data (midi-sx-send-get-bytes (mk-patch-msg num))]
     (reset! presets* p-data)
     p-data)))
 
 (defn print-patch
-	"Request the given patch from the connected device"
-	([num] 
-	(let [pdata  (dec2str (get-patch num))]
+        "Request the given patch from the connected device"
+        ([num]
+        (let [pdata  (dec2str (get-patch num))]
        (locking System/out (println "Patch # " num ":" pdata)) )))
 
 (defn psxs
-	"print sysex message"
-	[]
-	(dec2str (sx-pop)))
+        "print sysex message"
+        []
+        (dec2str (sx-pop)))
 
 (defn prn-psxs
-		"print sysex message"
-		[]
-		(println (dec2str (sx-pop))))
-		
-(defn print-patch-range
-	"print a range of patchs"
-	[st en] 
-	(let [last-patch (+ en 1)]
-		(map #(do (println "Patch " % ":") (dcu.data-tools/printhex  (get-patch %)) ) (range st last-patch))))
+                "print sysex message"
+                []
+                (println (dec2str (sx-pop))))
 
-(defn tocsv 
-	"return csv data for the given seq"
-	[msg]
-	(clojure.string/replace (dec2str (msg)) #" " ",") )
+(defn print-patch-range
+        "print a range of patchs"
+        [st en]
+        (let [last-patch (+ en 1)]
+                (map #(do (println "Patch " % ":") (dcu.data-tools/printhex  (get-patch %)) ) (range st last-patch))))
+
+(defn tocsv
+        "return csv data for the given seq"
+        [msg]
+        (clojure.string/replace (dec2str (msg)) #" " ",") )
 
 (defn patch2csv
-	"Append preset data 'num' to the given file"
-	[num file-name]
-	(do
-		(let [pdata (get-patch num)
+        "Append preset data 'num' to the given file"
+        [num file-name]
+        (do
+                (let [pdata (get-patch num)
           hdata (dec2str (get-patch num))
           hdata-newline (clojure.string/join (vector  hdata "\n"))
-          preset-data (clojure.string/replace hdata-newline #" " ",")] 
-		(spit file-name preset-data :append true))))
+          preset-data (clojure.string/replace hdata-newline #" " ",")]
+                (spit file-name preset-data :append true))))
 
 (defn mk-file-hdr
   "Create the file 'file-name' and write information about the time, device, and version"
@@ -151,21 +166,21 @@
     (spit file-name v :append true)
     (spit file-name "\n" :append true)))
 
-(defn lprt [s] 
+(defn lprt [s]
     (locking System/out (print s))
   true
-  ) 
+  )
 
-(defn lprtln [s] 
+(defn lprtln [s]
     (locking System/out (println s))
   true
-  ) 
+  )
 
 
 (defn dump-presets-csv
   "Save all presets as a csv in the given file"
   [file-name]
-   (do  
+   (do
     (println "Saving presets to " file-name)
     (sx-clear)
     (mk-file-hdr file-name "Preset Dump")
@@ -175,29 +190,48 @@
     (lprtln "\ndone")
      ))
 
+(defn preset-save-data 
+  "Write the preset seq to a file of the the name stored in the patch"
+  [pdata]
+  (do (let [fname (clojure.string/replace  
+                     (str (clojure.string/trim  
+                            (dcu.midi-protocol/preset-get-name pdata)) ".syx") " " "_") 
+            lname (clojure.string/lower-case fname) 
+            pnum (dcu.midi-protocol/preset-get-num pdata) ]
+        (do 
+          (println "Saving preset " pnum " to file " lname )
+          (spit-binary lname (into-array Byte/TYPE pdata))))))
+
+(defn preset-save
+  "Save the specified preset"
+  [num]
+  (do (let [pdata (get-patch num) ]
+        (do 
+          (preset-save-data pdata)))))
+
 (defn save-patch-txt
-	" Save the patch number to the txt file patch-#.txt"
-	[num]
-	(do
-		(let [ pdata (get-patch num)] 
-		(spit (clojure.string/join (vector "patch-" num ".txt")) (dec2str pdata)))))
-			
+        " Save the patch number to the txt file patch-#.txt"
+        [num]
+        (do
+                (let [ pdata (get-patch num)]
+                (spit (clojure.string/join (vector "patch-" num ".txt")) (dec2str pdata)))))
+
 (defn save-patch-html
   [num]
   (do
     (get-patch num)
-	 (spit (clojure.string/join (vector "../server/public/patch-" num ".html")) (psxs))))
+         (spit (clojure.string/join (vector "../server/public/patch-" num ".html")) (psxs))))
 (defn get-range-of-patches
-	"Return the patch data for each patch within the patch range: start to end"
-	[st en] 
-	(let [last-patch (+ en 1)]
+        "Return the patch data for each patch within the patch range: start to end"
+        [st en]
+        (let [last-patch (+ en 1)]
        ))
 
 (defn save-patch-range
-	"Return the patch data for each patch within the patch range: start to end"
-	[st en] 
-	(let [last-patch (+ en 1)
-		    pdata (map #(get-patch %) (range st last-patch))] 
+        "Return the patch data for each patch within the patch range: start to end"
+        [st en]
+        (let [last-patch (+ en 1)
+                    pdata (map #(get-patch %) (range st last-patch))]
        (seq pdata)))
 
 (defn prt-id []
@@ -207,19 +241,17 @@
   )
   )
 (defn id-dev
-	[]
-	(do 
-		(clear-sysex-hdr)
-		(sx-clear)
-		(init-sysex (send-dev-query) )
-		(if (sx-man?) 
-          (println "DEVICE FOUND: " (dev-name)) 
+        []
+        (do
+                (clear-sysex-hdr)
+                (sx-clear)
+                (init-sysex (send-dev-query) )
+                (if (sx-man?)
+          (println "DEVICE FOUND: " (dev-name))
           (println "NO DEVICE FOUND"))))
-		
+
 (defn idbg [] (init-midi "Port") (id-dev))
-(defn gp 
+(defn gp
   "get preset n, and return the first 8 bytes as a hext string"
-  [n] 
+  [n]
   (do (get-preset n) (hhp 15)))
-
-
