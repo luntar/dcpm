@@ -22,3 +22,5 @@ bin/dcu/*.clj
 .settings
 
 foo.txt
+
+data/*
