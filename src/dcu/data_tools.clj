@@ -14,6 +14,11 @@
 	"Return the lower bits of the given value so it can be encoded in a 7-bit midi byte"
 	[val] 
 	(bit-and val 0x7F))
+
+(defn mk16
+  "Takes two 7bit midi bytes, hi, and lo, and returns a 16 bit integer"
+  [hi lo ]
+  (+ (bit-shift-left hi 7) (bit-and lo 0x7F)))
 	
 (defn dmp-array 
 	"A function to return byte-array as a seq"
@@ -26,7 +31,7 @@
 	[#^bytes barr]
 	(let [len (alength ^bytes barr)] 
 		(if (> len 0) 
-		(conj (dmp-array barr) -16) 
+		(if (= -16 ( aget ^bytes barr 0)) (dmp-array barr) ( conj (dmp-array barr) -16)) 
 		'())))
 	
 (def dex2hex (hash-map 
@@ -51,6 +56,7 @@
   "Convert a twoscomp byte to an 8bit hex string -16->\"F0\""
   [val]
   (dex2hex val))
+
 (defn dec2str
 	"Convert a list of byte values to hex equivalent" 
 	[list-of-dec]
@@ -108,9 +114,6 @@
     (.write fos bytes)
     (.close fos)))
  
-; This is like a global var, but it's thread safe!  Dave, the '*' is 
-; part of the name, it's not a pointer, etc...  It tells us that 'presets*'
-; is a mutabel var.
 (def presets*  (atom  [])) 
 
 (defn load-presets 
@@ -142,6 +145,7 @@
         (aset-byte new-a idx new-hi)
         (aset-byte new-a (+ idx 1) new-lo)
         new-a))
+
 (defn mk-preset-vector
   "Returns a vector of vectors by subdividing the vector n by a count of p-sz.
    This requires that each preset in n is exactly the size p-sz.
