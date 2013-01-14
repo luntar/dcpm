@@ -38,7 +38,11 @@
       (format "%c.%c%c" V1 V2 V3 )
       (format "DEVELOPMENT %c-%c%c%c" V0 V1 V2 V3 ))))
 
-	 
+(defn preset-get-name
+  "Return an ascii string from the given list of patch data"
+  [p]
+    (apply str (map char  (drop-last 2  (take-last 18 p))))  )	 
+
 (defn clear-sysex-hdr
 	[]
 	(dosync 
@@ -137,4 +141,8 @@
 	[patch-num] 
   (mk-command-msg :read-preset patch-num))
 
+(defn preset-get-num 
+  "Return the preset number for the given preset seq"
+  [pdata]
+  (dcu.data-tools/mk16  (nth pdata 7)  (nth pdata 8)))
 
