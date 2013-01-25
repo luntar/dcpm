@@ -3,10 +3,11 @@
   (:use [dcu.midi-protocol])
   (:require dcu.midi-ctrl)
   (:use [dcu.data-tools])
+  (:require [dcu.gui :as gui])
   (:use [dcu.settings])
   (:use [clojure.tools.cli :only  [cli]])
   (:require  [clojure.string])
-  (:use [clojure.pprint])) 
+  (:use [clojure.pprint]))
 
 (defn version [] "0.0.2")
 
@@ -19,12 +20,8 @@
         (do (dcu.midi-ctrl/init-midi (dcu.settings/config-get :port)) 
                                     (dcu.midi-ctrl/id-dev) 
                                     (swap! midi-running* inc )))))
-(comment 
-  (defn t [] 
-    (do
-      (init-midi "Port")
-      (id-dev)
-      (println (psx)))))
+
+
 
 (defn -main [ & args]
 
@@ -39,12 +36,15 @@
       ["-d" "--destination" "Destination preset 0-199" :parse-fn #(Integer. %)]
 			["-t" "--run-test" "run specific test number"  :default 0 :parse-fn #(Integer. %)]
       ["-e" "--restore" "Restore specified preset file"]
-      ["-c" "--csv" "dump each patch to a csv file"]
+      ["-c" "--csv" "dump each patch to a csv file" :parse-fn #(String. %)]
 			["-p" "--midi-port" "Sets and saves the MIDI port assigment"]
 			["-l" "--list-midi-ports" "Prints MIDI dev descriptions" :default false :flag true]
+			["-g" "--start-gui" "starts the gui" :default true :flag true]
 			)]
       
 	   (try
+        (when (:start-gui options)
+              (gui/execute-gui options))
         (when (:help options)
               (println banner)
               (System/exit 0))
@@ -113,7 +113,6 @@
              (System/exit 0))))
 
         (catch Exception e
-          (println "Internal Error: " e )))
-   ))
+          (println "Internal Error: " e )))))
   
 ; "/Users/john/proj/dc/fp105.syx"

@@ -1,7 +1,6 @@
 (ns dcu.sx-data
 	(:use [dcu.data-tools])
-  (:require dcu.util)
-  )
+  (:require [dcu.util :as util]))
 
 (def sx-data* (ref []))
 
@@ -54,6 +53,6 @@
 (defn sx-wait
   "Wait for a sysex message or timeout after \"ms\" milliseconds"
   [ms]
-  (dcu.util/time-limited ms  (while (= (sx-len) 0)
+  (util/time-limited ms  (while (= (sx-len) 0)
          (Thread/sleep 2)))) 
 

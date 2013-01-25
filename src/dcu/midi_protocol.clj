@@ -1,6 +1,5 @@
 (ns dcu.midi-protocol
-	(:use [dcu.data-tools])
-)
+	(:use [dcu.data-tools]))
 
 (defonce DEV-INQ-RESP '(-16 126 0 6 2)) ; per MIDI spec
 
@@ -11,7 +10,6 @@
 (def sx-ver* (ref []))
 
 (defn sx-man? [] (not (empty? @sx-man*)))
-
 
 (def dnames 
 	(hash-map 
@@ -41,7 +39,7 @@
 (defn preset-get-name
   "Return an ascii string from the given list of patch data"
   [p]
-    (apply str (map char  (drop-last 2  (take-last 18 p))))  )	 
+    (apply str (map char  (drop-last 2  (take-last 18 p)))))
 
 (defn clear-sysex-hdr
 	[]
@@ -56,8 +54,7 @@
            :id
            :family
            :product
-           :version
-           )
+           :version)
 
 (defn init-sysex
   "Takes a MIDI ID device response and initializes mutable device info "
@@ -80,8 +77,7 @@
       (ref-set sx-man* [-16 id0 id1 id2])
       (ref-set sx-fam* [fam0 fam1])
       (ref-set sx-pid* [pid0 pid1])
-      (ref-set sx-ver* [ver0 ver1 ver2 ver3]))
-      )
+      (ref-set sx-ver* [ver0 ver1 ver2 ver3])))
     (clear-sysex-hdr)))
 
 (defn init-sysex-manufact
@@ -127,6 +123,7 @@
               :write-esn 0x20 
               :read-esn 0x21 
               :reinit-presets 0x1F})
+
 (defn mk-command-msg
 	"Returns a MIDI byte sequences to command the current device.  A command is
  an 1 byte opcod and an optional 16 bit argument"

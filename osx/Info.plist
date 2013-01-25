@@ -14,9 +14,9 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeIconFile</key>
-			<string>text.icns</string>
+			<string>dcpm_patch.icns</string>
 			<key>CFBundleTypeName</key>
-			<string>ImageJ Document</string>
+			<string>DCPM Patch File</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>****</string>
@@ -28,7 +28,7 @@
 	<key>CFBundleExecutable</key>
 	<string>JavaApplicationStub</string>
 	<key>CFBundleGetInfoString</key>
-	<string>http://brinko.com</string>
+	<string>http://strymon.new</string>
 	<key>CFBundleIconFile</key>
 	<string>dcpm.icns</string>
 	<key>CFBundleInfoDictionaryVersion</key>

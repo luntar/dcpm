@@ -1,5 +1,4 @@
 (ns dcu.settings
-  (:require [clojure.string ])
   (:use [clj-time.local :only [local-now]])
   (:import [java.io FileOutputStream FileInputStream])
   (:use [clojure.pprint])
