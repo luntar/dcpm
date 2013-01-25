@@ -3,6 +3,7 @@
 /classes
 /checkouts
 pom.xml
+/dcpm.app
 *.jar
 *.class
 .lein-deps-sum
@@ -15,6 +16,7 @@ tags
 
 syx/fw105.syx
 
+/build/*
 
 bin/dcpm/*.clj
 bin/dcu/*.clj
@@ -24,3 +26,5 @@ bin/dcu/*.clj
 foo.txt
 
 data/*
+
+build/dcpm.app/Contents/Info.plist
