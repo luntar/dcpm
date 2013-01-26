@@ -1,14 +1,11 @@
-
 (ns dcu.util
  (:import [java.net URL]
            [java.io StringWriter])
- (:use [clojure.java.io]
-  )
-)
+ (:use [clojure.java.io]))
 
 (defn delay-ms
   "delay thread by givin ms"
-  [ms] 
+  [ms]
   (Thread/sleep ms))
 
 ;; Thanks to Timothy Pratley and stackoverflow
@@ -17,9 +14,9 @@
   `(let [f# (future ~@body)]
      (.get f# ~ms java.util.concurrent.TimeUnit/MILLISECONDS)))
 
-;; System helper fns shamelessly yanked 
+;; System helper fns shamelessly yanked
 ;; from Overtone, thanks to Sam Aaron and Jeff Rose
-;; TODO: figure out a better way of sharing code 
+;; TODO: figure out a better way of sharing code
 (defn chop-first-n
   "Removes the first n chars in str. Returns empty string if n is >= str length."
   [n str]
@@ -49,6 +46,8 @@
 
 (declare mk-path)
 
+;; System helper fns shamelessly yanked
+;; from Overtone, thanks to Sam Aaron and Jeff Rose
 (defn resolve-tilde-path
   "Returns a string which represents the resolution of paths starting with
    ~ to point to home directory."
@@ -82,6 +81,8 @@
     (when-not (.exists f)
       (.mkdir f))))
 
+;; System helper fns shamelessly yanked
+;; from Overtone, thanks to Sam Aaron and Jeff Rose
 (defn file-exists?
   "Returns true if a file specified by path exists"
   [path]
@@ -106,6 +107,8 @@
       (re-find #"[Ll]inux" os)   :linux
       (re-find #"[Mm]ac" os)     :mac)))
 
+;; System helper fns shamelessly yanked
+;; from Overtone, thanks to Sam Aaron and Jeff Rose
 (defn classpath-seq
   "Return the the classpath as a seq"
   []
@@ -130,4 +133,3 @@
   (let [first-char (.toUpperCase (str (first text)))
         rest-chars (apply str (rest text))]
     (str first-char rest-chars)))
-

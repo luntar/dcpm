@@ -63,7 +63,7 @@
               (dcu.settings/config-set! :port (:midi-port options)))
 
         (println "Using MIDI Port: "  (dcu.settings/config-get :port)) 
-       ;(println "Options: " (count options) " " options)
+       ; (println "Options: " (count options) " " options)
 
         ( when (not= 0  (:run-test options) )
             ( let [id (:run-test options)]
