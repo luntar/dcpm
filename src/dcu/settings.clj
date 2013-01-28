@@ -5,18 +5,18 @@
   (:use dcu.util))
 
 ;; This should be temporay...
-(def storage (constantly :file))
+(def dcu_storage (constantly :file))
 
 ;; Store interface:
-(defmulti write-file-store storage)
-(defmulti read-file-store  storage)
+(defmulti write-file-store dcu_storage)
+(defmulti read-file-store  dcu_storage)
 
-(def F-LOCK :lock)
+(def DCU_F-LOCK :lock)
 
-;; Simple file-based storage
+;; Simple file-based dcu_storage
 (defmethod write-file-store :file
   [path data]
-  (locking F-LOCK
+  (locking DCU_F-LOCK
     (spit path (with-out-str (pprint data)))))
 
 (defmethod read-file-store :file
@@ -36,7 +36,7 @@
 (def DCPM-BACKUP-FILE (str (:backup DCPM-DIRS) "/backup.clj"))
 (def DCPM-LOG-FILE    (str (:log    DCPM-DIRS) "/dcpm.log"))
 
-(def CONFIG-DEFAULTS
+(def DCU_CONFIG-DEFAULTS
   {:os (get-os)
    :user-name (capitalize (system-user-name))
    :port "Port"})
@@ -67,55 +67,55 @@
                 (when-not (= old-state new-state)
                   (write-file-store path new-state)))))
 
-(defonce config* (ref {}))
-(defonce live-config (partial live-file-store config*))
+(defonce dcu_config* (ref {}))
+(defonce dcu_live-config (partial live-file-store dcu_config*))
 
 (defn- load-config-defaults
   []
   (dosync
    (dorun
     (map (fn [[k v]]
-           (when-not (contains? @config* k)
-             (alter config* assoc k v)))
-         CONFIG-DEFAULTS))))
+           (when-not (contains? @dcu_config* k)
+             (alter dcu_config* assoc k v)))
+         DCU_CONFIG-DEFAULTS))))
 
 
-(defn config-get
+(defn config-read
   "Get config value. Returns default if specified and the config does
   not contain key."
   ([key]
-     (get @config* key))
+     (get @dcu_config* key))
   ([key not-found]
-     (let [c @config*]
+     (let [c @dcu_config*]
        )))
 
-(defn config-set!
+(defn config-write!
   "Set config key to val"
   [k v]
   (dosync
-   (alter config* assoc k v)))
+   (alter dcu_config* assoc k v)))
 
-(defn config
+(defn dcu_config
   "Get the full config map"
   []
-  @config*)
+  @dcu_config*)
 
-(defn load-config 
+(defn dcu_load-config 
   "Load the config data from the file system"
   [path]
   (dosync
-    (ref-set config* (read-file-store path))))
+    (ref-set dcu_config* (read-file-store path))))
 
-(defonce __ENSURE-DIRS___
+(defonce __DCU_ENSURE-DIRS___
   (ensure-dir-structure))
 
-(defonce __ENSURE-CONFIG__
+(defonce __DCU_ENSURE-CONFIG__
   (ensure-config))
 
-(defonce __LOAD-CONFIG__
+(defonce __DCU_LOAD-CONFIG__
   (try
     (do
-      (live-config DCPM-CONFIG-FILE)
+      (dcu_live-config DCPM-CONFIG-FILE)
       (load-config-defaults)
       )
     (catch Exception e

@@ -15,6 +15,7 @@
         seesaw.mig
         [seesaw.widgets.log-window]
         [clojure.java.io :only [file]]))
+
 (seesaw.dev/debug!)
 (native!)
 
@@ -173,7 +174,7 @@
     :title "Damage Control Preset Librarean"
     :content main-panel
     :minimum-size [(* 1 640) :by (* 0.5 480)]
-    :on-close   :exit
+    :on-close   :dispose ;;:exit
     :menubar menus))
 
 (defn show []
@@ -189,11 +190,11 @@
     (listen dmp-btn :action (fn [e] (say-later (dec2str @presets*))))
     (listen sync-btn :action sync-action)
     (listen lb :selection lb-select-action)
-    (listen cb :selection (fn [e] (dcu.settings/config-set! :port (selection e))))
+    (listen cb :selection (fn [e] (dcu.settings/config-write! :port (selection e))))
     
     (bind/bind pnames* (bind/property lb :model))
     (bind/bind mports* (bind/property cb :model))
-    (push-mports (dcu.settings/config-get :port))
+    (push-mports (dcu.settings/config-read :port))
     ))
 
 (comment

@@ -21,16 +21,17 @@
 (defn dmp-array
         "A function to return byte-array as a seq"
         [#^bytes barr]
-        (let [len (alength ^bytes barr)]
+        (if-let [len (alength ^bytes barr)]
                 (map #(+ (aget ^bytes barr %) 0) (range 0 len))))
 
 (defn dmp-sysex-array
-        "A function to print byte-array of midi sysex data by conj'ing a 0xF0 to the start of the list"
+        "Convert a Byte array into a list of midi bytes"
         [#^bytes barr]
         (let [len (alength ^bytes barr)]
                 (if (> len 0)
                 (if (= -16 ( aget ^bytes barr 0)) (dmp-array barr) ( conj (dmp-array barr) -16))
                 '())))
+(def bytes2sysex dmp-sysex-array)
 
 (def dex2hex (hash-map
         0 "00" 1 "01" 2 "02" 3 "03" 4 "04" 5 "05" 6 "06" 7 "07" 8 "08" 9 "09" 10 "0A" 11 "0B" 12 "0C" 13 "0D" 14 "0E" 15 "0F"

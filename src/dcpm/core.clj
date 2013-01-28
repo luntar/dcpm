@@ -7,6 +7,9 @@
   (:use [dcu.settings])
   (:use [clojure.tools.cli :only  [cli]])
   (:require  [clojure.string])
+  (:use [overtone.studio.midi])
+  (:use [overtone.midi])
+  (:require [overtone.config.log :as log])
   (:use [clojure.pprint]))
 
 (defn version [] "0.0.2")
@@ -17,7 +20,7 @@
   "starts up the midi subsystem, or if it's running does nothing"
   []
   (do (if (zero? @midi-running*)
-        (do (dcu.midi-ctrl/init-midi (dcu.settings/config-get :port)) 
+        (do (dcu.midi-ctrl/init-midi (dcu.settings/config-read :port)) 
                                     (dcu.midi-ctrl/id-dev) 
                                     (swap! midi-running* inc )))))
 
@@ -60,9 +63,9 @@
               (System/exit 0))
 
 	      (when (:midi-port options)
-              (dcu.settings/config-set! :port (:midi-port options)))
+              (dcu.settings/config-write! :port (:midi-port options)))
 
-        (println "Using MIDI Port: "  (dcu.settings/config-get :port)) 
+        (println "Using MIDI Port: "  (dcu.settings/config-read :port)) 
        ; (println "Options: " (count options) " " options)
 
         ( when (not= 0  (:run-test options) )

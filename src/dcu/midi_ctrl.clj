@@ -132,7 +132,7 @@
 
 (defn print-patch-range
         "print a range of patchs"
-        [st en]
+       [st en]
         (let [last-patch (+ en 1)]
                 (map #(do (println "Patch " % ":") (dcu.data-tools/printhex  (get-patch %)) ) (range st last-patch))))
 (defn tocsv
@@ -253,7 +253,7 @@
   "starts up the midi subsystem, or if it's running does nothing"
   []
   (do (if (zero? @connection-status*)
-        (do (init-midi (dcu.settings/config-get :port)) 
+        (do (init-midi (dcu.settings/config-read :port)) 
                                     (id-dev) 
                                     (swap! connection-status* inc )))))
 (defn disconnect 
@@ -267,3 +267,4 @@
   "get preset n, and return the first 8 bytes as a hext string"
   [n]
   (do (get-preset n) (hhp 15)))
+
