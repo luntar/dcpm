@@ -4,14 +4,17 @@
   :license {:name "Eclipse Public License"
   :url "http://www.eclipse.org/legal/epl-v10.html"}
   :offline? no 
-;  :jvm-opts  ["-Xdock:name=DCPatchMgr"]
+  :jvm-opts  ["-Xdock:name=DCPatchMgr"]
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/clojure-contrib "1.2.0"]
                  [clj-time "0.4.4"]
+                 [overtone "0.8.0"] 
                  [seesaw "1.4.2"]
                  ]
   :uberjar-name "../dcpm.jar"
   :main dcpm.core
 )
               ;[gloss "0.2.2-beta3"]
+                 ;[overtone/at-at "1.0.0"]
+                 ;[overtone/midi-clj "0.5.0"]
